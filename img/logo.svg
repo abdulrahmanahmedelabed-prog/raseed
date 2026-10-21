@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="رصيد — RASEED"><title>رصيد — RASEED</title><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#138a74"/><stop offset="1" stop-color="#0a4c41"/></linearGradient></defs>
+<rect width="64" height="64" rx="14" fill="url(#rg)"/>
+<path d="M32 7.5 54 16.5 32 25.5 10 16.5z" fill="#e2bd52"/>
+<path d="M19.5 20.6v6c3.6 3.2 21.4 3.2 25 0v-6L32 25.7z" fill="#c79a2e"/>
+<path d="M50.5 17.6v9.2" stroke="#e2bd52" stroke-width="1.6" stroke-linecap="round"/><circle cx="50.5" cy="28" r="1.9" fill="#e2bd52"/>
+<rect x="11" y="33.4" width="42" height="3.4" rx="1.7" fill="#fff"/>
+<rect x="30.3" y="33.4" width="3.4" height="21.6" rx="1.7" fill="#fff"/>
+<path d="M15 42.5h11.5M15 48h8M38 42.5h11M38 48h7" stroke="#9fe3cf" stroke-width="2.6" stroke-linecap="round"/></svg>
