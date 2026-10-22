@@ -14,8 +14,6 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: true
-env:
-  APP_REPO: abdulrahmanahmedelabed-prog/university_accounting
 jobs:
   deploy:
     if: github.ref_name == github.event.repository.default_branch
@@ -27,16 +25,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download files from the latest release
         env:
-          # مستودع البرنامج الخاص يحتاج رمزاً للقراءة فقط باسم APP_REPO_TOKEN (Settings ← Secrets ← Actions)
-          GH_TOKEN: ${{ secrets.APP_REPO_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}
+          APP_REPO_TOKEN: ${{ secrets.APP_REPO_TOKEN }}
         run: |
           mkdir -p download
-          tag=$(gh release view --repo "$APP_REPO" --json tagName -q .tagName)
-          # ملفات التشغيل فقط؛ الشيفرة المصدرية لا تُنشر للعامة
-          gh release download "$tag" --repo "$APP_REPO" --dir download -p Raseed-Setup.exe -p Raseed-Windows-Portable.zip -p Raseed-Linux.tar.gz -p SHA256SUMS.txt
-          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
-          # ملف compose للتنزيل يسحب الصورة الجاهزة فقط (بلا build)
-          gh api -H "Accept: application/vnd.github.raw" "repos/$APP_REPO/contents/docker-compose.yml?ref=$tag" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
+          # الإصدارات تُبنى وتُنشر في هذا المستودع (release.yml): ملفات التشغيل فقط، بلا شيفرة مصدرية
+          if tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName 2>/dev/null); then
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir download -p Raseed-Setup.exe -p Raseed-Windows-Portable.zip \
+              -p Raseed-Linux.tar.gz -p docker-compose.yml -p SHA256SUMS.txt
+          else  # قبل أول إصدار هنا: آخر إصدار في مستودع البرنامج الخاص
+            app=abdulrahmanahmedelabed-prog/university_accounting
+            export GH_TOKEN="$APP_REPO_TOKEN"
+            tag=$(gh release view --repo "$app" --json tagName -q .tagName)
+            gh release download "$tag" --repo "$app" --dir download -p Raseed-Setup.exe -p Raseed-Windows-Portable.zip -p Raseed-Linux.tar.gz -p SHA256SUMS.txt
+            gh api -H "Accept: application/vnd.github.raw" "repos/$app/contents/docker-compose.yml?ref=$tag" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
+            (cd download && sha256sum docker-compose.yml >> SHA256SUMS.txt)
+          fi
+          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz|docker-compose\.yml)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
           grep -q "image:" download/docker-compose.yml
           (cd download && sha256sum -c SHA256SUMS.txt)
           sed -i "s/الإصدار [0-9][0-9.]* ·/الإصدار ${tag#v} ·/" index.html

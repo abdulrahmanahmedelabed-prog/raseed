@@ -1,0 +1,222 @@
+# يبني ملفات تنزيل رصيد من مستودع البرنامج الخاص وينشرها إصداراً في هذا المستودع العام، ثم يحدّث صفحة التنزيل.
+# الشيفرة المصدرية لا تُنشر: ملفات التشغيل فقط (المثبّت والنسخة المحمولة وحزمة لينكس وصورة Docker).
+#
+# التشغيل: من تبويب Actions (الإصدار ونسخة البرنامج: وسم أو فرع أو رقم إيداع)، أو بدفع وسم v* إلى هذا المستودع
+# يطابق وسماً بالاسم نفسه في مستودع البرنامج.
+# أسرار مطلوبة (Settings ← Secrets and variables ← Actions):
+#   APP_REPO_TOKEN    رمز قراءة فقط لمستودع البرنامج الخاص (Contents: Read)
+#   RASEED_ROOT_KEY   المفتاح الجذري للمورّد (محتوى root.key)؛ بدونه يتوقف البناء ولا تُنشر نسخة بلا حماية الترخيص
+name: release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "اسم الإصدار (مثل v1.2.0)؛ يجب أن يطابق VERSION في البرنامج"
+        required: true
+      ref:
+        description: "نسخة البرنامج التي تُبنى: وسم أو فرع أو رقم إيداع (فارغ = الوسم نفسه)"
+        required: false
+permissions:
+  contents: write
+  packages: write
+  actions: write
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  APP_REF: ${{ github.event.inputs.ref || github.event.inputs.tag || github.ref_name }}
+  APP_REPO: abdulrahmanahmedelabed-prog/university_accounting
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        env:
+          APP_REPO_TOKEN: ${{ secrets.APP_REPO_TOKEN }}
+          RASEED_ROOT_KEY: ${{ secrets.RASEED_ROOT_KEY }}
+        run: |
+          [ -n "$APP_REPO_TOKEN" ] || { echo "::error::أضف السر APP_REPO_TOKEN (قراءة مستودع البرنامج)"; exit 1; }
+          [ -n "$RASEED_ROOT_KEY" ] || { echo "::error::أضف السر RASEED_ROOT_KEY: الإصدار العام يجب أن يكون موقّعاً"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.APP_REPO }}
+          ref: ${{ env.APP_REF }}
+          token: ${{ secrets.APP_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Tests
+        run: python -m unittest discover -s tests
+      - name: Build Linux and Windows packages (signed)
+        env:
+          RASEED_ROOT_KEY: ${{ secrets.RASEED_ROOT_KEY }}
+        run: |
+          python tools/build_release.py --expect-version "$TAG" --targets linux,windows
+          python -c "import json; i = json.load(open('build/release.json')); print(i); assert i['signed'], 'unsigned build'"
+      - name: Smoke test the Linux package
+        run: |
+          mkdir -p /tmp/s && tar xzf dist/Raseed-Linux.tar.gz -C /tmp/s
+          # بعدد العمليات الافتراضي: يكشف تعارض العمليات عند أول تشغيل، وبسجل بترميز لا يحمل العربية كخدمة ويندوز بلغة أخرى
+          RASEED_DATA=/tmp/s/data PYTHONIOENCODING=cp1252 python /tmp/s/raseed/app/run.py --no-browser --port 8890 > /tmp/s/server.log 2>&1 &
+          for i in $(seq 40); do curl -sf localhost:8890/api/status && break; sleep 1; done
+          curl -sf localhost:8890/api/status | grep -q '"product"'
+          sleep 3; cat /tmp/s/server.log; ! grep -q Traceback /tmp/s/server.log
+      - name: Smoke test the training edition (progress while preparing, then the full server)
+        run: |
+          RASEED_DATA=/tmp/s/data python /tmp/s/raseed/app/run.py --training --scale test --no-browser --port 8892 > /tmp/s/training.log 2>&1 &
+          seen=""
+          for i in $(seq 180); do
+            st=$(curl -s localhost:8892/api/status || true)
+            case "$st" in *preparing*) seen=1 ;; *needs_setup*) break ;; esac
+            sleep 1
+          done
+          echo "$st" | grep -q needs_setup
+          curl -s -o /dev/null -w '%{http_code}\n' localhost:8892/ | grep -q 200
+          cat /tmp/s/training.log; ! grep -q Traceback /tmp/s/training.log
+          echo "progress screen seen: ${seen:-no (finished before the first check)}"
+      - name: Docker compose file for download (pulls the published image, no build)
+        run: |
+          sed '/^[[:space:]]*build: \.$/d' docker-compose.yml > dist/docker-compose.yml
+          grep -q "image:" dist/docker-compose.yml
+          cp packaging/RELEASE_NOTES.md dist-notes.md
+          printf '\n\n<sub>بُني من نسخة البرنامج %s</sub>\n' "$(git rev-parse --short HEAD)" >> dist-notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notes
+          path: dist-notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-tree
+          path: build/windows/
+
+  windows:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.APP_REPO }}
+          ref: ${{ env.APP_REF }}
+          token: ${{ secrets.APP_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Tests on Windows
+        run: python -m unittest discover -s tests
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-tree
+          path: build/windows
+      - name: Smoke test the embedded Python
+        shell: pwsh
+        run: |
+          $py = "build\windows\Raseed\python\python.exe"
+          & $py -c "import oracledb, sqlite3; print('oracledb', oracledb.__version__, 'sqlite', sqlite3.sqlite_version)"
+          if ($LASTEXITCODE -ne 0) { throw "embedded python failed" }
+          $env:RASEED_DATA = "$env:RUNNER_TEMP\rd"
+          $p = Start-Process -FilePath $py -ArgumentList "build\windows\Raseed\app\run.py", "--no-browser", "--port", "8891" -PassThru
+          $r = $null
+          for ($i = 0; $i -lt 60 -and -not $r; $i++) { try { $r = Invoke-RestMethod http://localhost:8891/api/status } catch { Start-Sleep 1 } }
+          Stop-Process -Id $p.Id -Force
+          if (-not $r.product) { throw "server did not start" }
+          Write-Host "server ok: $($r.product) $($r.version)"
+      - name: Build the installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          & $iscc "/DAppVersion=$($env:TAG.TrimStart('v'))" packaging\windows\raseed.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc failed" }
+      - name: Silent install test
+        shell: pwsh
+        run: |
+          Start-Process -FilePath dist\Raseed-Setup.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/DIR=$env:RUNNER_TEMP\ri" -Wait
+          if (-not (Test-Path "$env:RUNNER_TEMP\ri\python\python.exe")) { throw "install failed" }
+          if (-not (Test-Path "$env:RUNNER_TEMP\ri\app\run.py")) { throw "install incomplete" }
+          Write-Host "installer ok"
+      - name: Autostart test (scheduled task, browser hand-off, removal)
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          $app = "$env:RUNNER_TEMP\ri"
+          cmd /c "$app\Install-Autostart.bat < NUL"
+          $r = $null
+          for ($i = 0; $i -lt 30 -and -not $r; $i++) { try { $r = Invoke-RestMethod http://localhost:8800/api/status } catch { Start-Sleep 1 } }
+          if (-not $r.product) { Get-Content "$app\data\server.log" -ErrorAction SilentlyContinue; throw "service did not start" }
+          $task = Get-ScheduledTask -TaskName "Raseed Server"
+          Write-Host "task: $($task.State), time limit $($task.Settings.ExecutionTimeLimit), on batteries $(-not $task.Settings.DisallowStartIfOnBatteries)"
+          if ($task.Settings.ExecutionTimeLimit -ne "PT0S") { throw "the server task has a run time limit" }
+          Get-Content "$app\data\server.log"
+          cmd /c "$app\Remove-Autostart.bat < NUL"
+          Start-Sleep 3
+          if (Get-NetTCPConnection -LocalPort 8800 -State Listen -ErrorAction SilentlyContinue) { throw "server still running after Remove-Autostart" }
+          Write-Host "autostart ok"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: dist/Raseed-Setup.exe
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.APP_REPO }}
+          ref: ${{ env.APP_REF }}
+          token: ${{ secrets.APP_REPO_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/abdulrahmanahmedelabed-prog/raseed:${{ env.TAG }}
+            ghcr.io/abdulrahmanahmedelabed-prog/raseed:latest
+
+  publish:
+    needs: [build, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: notes
+          path: .
+      - name: Checksums
+        run: cd dist && rm -f SHA256SUMS.txt && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Publish the release here
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER="${TAG#v}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "رصيد $VER — النظام المالي للجامعات" --notes-file dist-notes.md --latest
+          else
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "رصيد $VER — النظام المالي للجامعات" --notes-file dist-notes.md --latest
+          fi
+      - name: Refresh the download page
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}"
