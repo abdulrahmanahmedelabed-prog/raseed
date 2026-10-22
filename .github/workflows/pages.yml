@@ -30,8 +30,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p download
-          gh release download --repo "$APP_REPO" --dir download
           tag=$(gh release view --repo "$APP_REPO" --json tagName -q .tagName)
+          gh release download "$tag" --repo "$APP_REPO" --dir download
           # ملف compose للتنزيل يسحب الصورة الجاهزة فقط (بلا build)
           curl -fsSL "https://raw.githubusercontent.com/$APP_REPO/$tag/docker-compose.yml" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
           (cd download && sha256sum -c SHA256SUMS.txt)
