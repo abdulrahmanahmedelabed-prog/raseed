@@ -95,6 +95,8 @@ jobs:
   windows:
     needs: build
     runs-on: windows-latest
+    env:
+      PYTHONUTF8: "1"  # سجلات البناء وNuitka بالعربية على طرفية ويندوز
     steps:
       - uses: actions/checkout@v4
         with:
