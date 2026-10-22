@@ -1,9 +1,12 @@
-# ينشر صفحة رصيد على GitHub Pages مع كل تحديث.
+# ينشر صفحة رصيد على GitHub Pages مع كل تحديث، وملفات التنزيل من آخر إصدار تُنسخ داخل الموقع نفسه (download/)
+# فلا يحتاج الزائر للذهاب إلى أي صفحة أخرى. يُعاد النشر يومياً ليلتقط الإصدارات الجديدة.
 # مرة واحدة: Settings ← Pages ← Build and deployment ← Source: GitHub Actions
 name: pages
 on:
   push:
   workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * *"
 permissions:
   contents: read
   pages: write
@@ -11,6 +14,8 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: true
+env:
+  APP_REPO: abdulrahmanahmedelabed-prog/university_accounting
 jobs:
   deploy:
     if: github.ref_name == github.event.repository.default_branch
@@ -20,6 +25,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Download files from the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p download
+          gh release download --repo "$APP_REPO" --dir download
+          tag=$(gh release view --repo "$APP_REPO" --json tagName -q .tagName)
+          # ملف compose للتنزيل يسحب الصورة الجاهزة فقط (بلا build)
+          curl -fsSL "https://raw.githubusercontent.com/$APP_REPO/$tag/docker-compose.yml" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
+          (cd download && sha256sum -c SHA256SUMS.txt)
+          sed -i "s/الإصدار [0-9][0-9.]* ·/الإصدار ${tag#v} ·/" index.html
+          grep -q "الإصدار ${tag#v} ·" index.html
+          ls -l download
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

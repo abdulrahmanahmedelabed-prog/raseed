@@ -28,7 +28,7 @@
   <h1>محاسبة الجامعة كلها في نظام واحد، وفق المعايير الدولية، ويدقّق نفسه كل يوم</h1>
   <p class="lead">من فاتورة الطالب إلى القوائم المالية: رسوم الساعات المعتمدة والمنح والجهات الكافلة، التحصيل بعدة عملات، الخزينة، الرواتب، المشتريات، الأصول، المنح البحثية، ومساعدة الطلبة المحتاجين بسرية — بالعربية، على خادم الجامعة، ودون الحاجة لاتصال بالإنترنت.</p>
   <div class="cta">
-    <a class="btn primary" href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases/latest/download/Raseed-Setup.exe">تنزيل لويندوز</a>
+    <a class="btn primary" href="download/Raseed-Setup.exe">تنزيل لويندوز</a>
     <a class="btn" href="#download">لينكس وDocker والنسخة المحمولة</a>
     <a class="btn ghost" href="guides/#start">ابدأ بنسخة التدريب</a>
   </div>
@@ -104,8 +104,8 @@
     <div class="card dl-main">
       <h3>ويندوز</h3>
       <p>ويندوز 10 و11 وويندوز سيرفر 2016 فما بعد. مثبّت عادي لا يحتاج صلاحية مسؤول، ويضيف اختصارات للنسخة الفعلية ونسخة التدريب وخادم الشبكة الداخلية.</p>
-      <div class="dl-btns"><a class="btn primary" href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases/latest/download/Raseed-Setup.exe">تنزيل المثبّت (Raseed-Setup.exe)</a>
-        <a class="btn" href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases/latest/download/Raseed-Windows-Portable.zip">نسخة محمولة بلا تثبيت (zip)</a></div>
+      <div class="dl-btns"><a class="btn primary" href="download/Raseed-Setup.exe">تنزيل المثبّت (Raseed-Setup.exe)</a>
+        <a class="btn" href="download/Raseed-Windows-Portable.zip">نسخة محمولة بلا تثبيت (zip)</a></div>
       <p class="muted">بايثون ومكتبة الربط بـ Oracle مدمجان؛ لا شيء آخر تثبته. على خادم الجامعة: <code>Install-Autostart.bat</code> يشغّله مع إقلاع ويندوز.</p>
     </div>
     <div class="card">
@@ -113,22 +113,22 @@
       <p>أوبونتو 22.04+، دبيان 12+، RHEL أو Rocky 9+. يُثبَّت خدمة systemd تعمل مع الإقلاع.</p>
       <pre>tar xzf Raseed-Linux.tar.gz
 cd raseed && sudo ./install.sh</pre>
-      <a class="btn" href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases/latest/download/Raseed-Linux.tar.gz">Raseed-Linux.tar.gz</a>
+      <a class="btn" href="download/Raseed-Linux.tar.gz">Raseed-Linux.tar.gz</a>
     </div>
     <div class="card">
       <h3>Docker</h3>
       <p>صورة جاهزة ببيانات في مجلد دائم، ونسخة تدريب اختيارية بجانبها.</p>
       <pre>docker compose up -d</pre>
-      <a class="btn" href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/blob/claude/eloquent-brahmagupta-xat0uw/docker-compose.yml">docker-compose.yml</a>
+      <a class="btn" href="download/docker-compose.yml">docker-compose.yml</a>
     </div>
     <div class="card">
       <h3>الشيفرة لأي نظام</h3>
       <p>ماك أو أي نظام فيه بايثون 3.11 فأحدث، دون أي مكتبات إضافية.</p>
       <pre>python run.py --training</pre>
-      <a class="btn" href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases/latest/download/Raseed-Source.zip">Raseed-Source.zip</a>
+      <a class="btn" href="download/Raseed-Source.zip">Raseed-Source.zip</a>
     </div>
   </div>
-  <p class="small muted" style="margin-top:12px">بصمات الملفات للتحقق من سلامة التنزيل: <a href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases/latest/download/SHA256SUMS.txt">SHA256SUMS.txt</a> · <a href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases">كل الإصدارات وملاحظاتها</a> · التحديث: ثبّت الإصدار الجديد فوق القديم، فتُرقّى قاعدة البيانات تلقائياً بعد نسخة احتياطية دون فقد أي بيانات.</p>
+  <p class="small muted" style="margin-top:12px">بصمات الملفات للتحقق من سلامة التنزيل: <a href="download/SHA256SUMS.txt">SHA256SUMS.txt</a> · التحديث: ثبّت الإصدار الجديد فوق القديم، فتُرقّى قاعدة البيانات تلقائياً بعد نسخة احتياطية دون فقد أي بيانات.</p>
 </div></section>
 
 <section id="universities" class="alt"><div class="wrap">
@@ -208,7 +208,7 @@ cd raseed && sudo ./install.sh</pre>
 <footer><div class="wrap foot">
   <img src="img/logo.svg" alt="" width="34" height="34">
   <div><b>رصيد</b> — النظام المالي للجامعات وفق المعايير الدولية. يعمل دون إنترنت ودون مكتبات أو خدمات خارجية.</div>
-  <nav><a href="guides/">الأدلة</a><a href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases">الإصدارات</a><a href="https://github.com/abdulrahmanahmedelabed-prog/university_accounting">المستودع</a></nav>
+  <nav><a href="#download">التنزيل</a><a href="guides/">الأدلة</a></nav>
 </div></footer>
 </body>
 </html>

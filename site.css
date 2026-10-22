@@ -83,6 +83,8 @@ header.top .btn.sm { padding: 6px 14px; font-size: 14px; }
 .small { font-size: 14px; }
 .foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .foot nav { display: flex; gap: 14px; margin-inline-start: auto; }
+.foot nav a { color: var(--text-2); text-decoration: none; }
+.foot nav a:hover { color: var(--accent); }
 @media (max-width: 820px) {
   .dl { grid-template-columns: minmax(0, 1fr); }
   .dl .dl-main { grid-template-columns: minmax(0, 1fr); }
