@@ -1,5 +1,6 @@
 # يبني ملفات تنزيل رصيد من مستودع البرنامج الخاص وينشرها إصداراً في هذا المستودع العام، ثم يحدّث صفحة التنزيل.
-# الشيفرة المصدرية لا تُنشر: ملفات التشغيل فقط (المثبّت والنسخة المحمولة وحزمة لينكس وصورة Docker).
+# الشيفرة المصدرية لا تُنشر: نسخة ويندوز (المثبّت والمحمولة) مترجمة بـ Nuitka إلى ملف تنفيذي بلا ملفات شيفرة،
+# ومعها حزمة لينكس وصورة Docker.
 #
 # التشغيل: من تبويب Actions (الإصدار ونسخة البرنامج: وسم أو فرع أو رقم إيداع)، أو بدفع وسم v* إلى هذا المستودع
 # يطابق وسماً بالاسم نفسه في مستودع البرنامج.
@@ -51,10 +52,10 @@ jobs:
           python-version: "3.13"
       - name: Tests
         run: python -m unittest discover -s tests
-      - name: Build Linux and Windows packages
+      - name: Build the Linux package
         env:
           RASEED_ROOT_KEY: ${{ secrets.RASEED_ROOT_KEY }}
-        run: python tools/build_release.py --expect-version "$TAG" --targets linux,windows
+        run: python tools/build_release.py --expect-version "$TAG" --targets linux
       - name: Smoke test the Linux package
         run: |
           mkdir -p /tmp/s && tar xzf dist/Raseed-Linux.tar.gz -C /tmp/s
@@ -90,10 +91,6 @@ jobs:
         with:
           name: notes
           path: dist-notes.md
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-tree
-          path: build/windows/
 
   windows:
     needs: build
@@ -109,23 +106,36 @@ jobs:
           python-version: "3.13"
       - name: Tests on Windows
         run: python -m unittest discover -s tests
-      - uses: actions/download-artifact@v4
-        with:
-          name: windows-tree
-          path: build/windows
-      - name: Smoke test the embedded Python
+      - name: Compile the Windows edition with Nuitka (no source files shipped)
+        env:
+          RASEED_ROOT_KEY: ${{ secrets.RASEED_ROOT_KEY }}
+        run: |
+          python -m pip install --quiet nuitka ordered-set zstandard oracledb
+          python tools/build_release.py --expect-version "$env:TAG" --targets windows --compiled
+      - name: Smoke test Raseed.exe
         shell: pwsh
         run: |
-          $py = "build\windows\Raseed\python\python.exe"
-          & $py -c "import oracledb, sqlite3; print('oracledb', oracledb.__version__, 'sqlite', sqlite3.sqlite_version)"
-          if ($LASTEXITCODE -ne 0) { throw "embedded python failed" }
+          $exe = "build\windows\Raseed\app\Raseed.exe"
+          if (Get-ChildItem build\windows\Raseed -Recurse -Filter *.py) { throw "source files in the compiled edition" }
+          $t = & $exe --self-test
+          Write-Host $t
+          if ($LASTEXITCODE -ne 0) { throw "self test failed" }
+          if (-not ($t | ConvertFrom-Json).oracledb) { throw "oracledb missing from the compiled edition" }
           $env:RASEED_DATA = "$env:RUNNER_TEMP\rd"
-          $p = Start-Process -FilePath $py -ArgumentList "build\windows\Raseed\app\run.py", "--no-browser", "--port", "8891" -PassThru
+          $p = Start-Process -FilePath $exe -ArgumentList "--no-browser", "--port", "8891" -PassThru
           $r = $null
           for ($i = 0; $i -lt 60 -and -not $r; $i++) { try { $r = Invoke-RestMethod http://localhost:8891/api/status } catch { Start-Sleep 1 } }
+          $ui = (Invoke-WebRequest http://localhost:8891/core.js -UseBasicParsing).StatusCode
           Stop-Process -Id $p.Id -Force
-          if (-not $r.product) { throw "server did not start" }
+          if (-not $r.product -or $ui -ne 200) { throw "server did not start" }
           Write-Host "server ok: $($r.product) $($r.version)"
+          # نسخة التدريب: شاشة التجهيز ثم الخادم الكامل، وعملية التحقق الكامل في الخلفية تعمل من الملف المترجم
+          $p = Start-Process -FilePath $exe -ArgumentList "--training", "--scale", "test", "--no-browser", "--port", "8893" -PassThru
+          $ready = $false
+          for ($i = 0; $i -lt 240 -and -not $ready; $i++) { try { $s = Invoke-RestMethod http://localhost:8893/api/status; $ready = -not $s.preparing -and $s.product } catch { }; if (-not $ready) { Start-Sleep 1 } }
+          Stop-Process -Id $p.Id -Force
+          if (-not $ready) { throw "training edition did not become ready" }
+          Write-Host "training edition ok"
       - name: Build the installer (Inno Setup)
         shell: pwsh
         run: |
@@ -138,8 +148,8 @@ jobs:
         shell: pwsh
         run: |
           Start-Process -FilePath dist\Raseed-Setup.exe -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/DIR=$env:RUNNER_TEMP\ri" -Wait
-          if (-not (Test-Path "$env:RUNNER_TEMP\ri\python\python.exe")) { throw "install failed" }
-          if (-not (Test-Path "$env:RUNNER_TEMP\ri\app\run.py")) { throw "install incomplete" }
+          if (-not (Test-Path "$env:RUNNER_TEMP\ri\app\Raseed.exe")) { throw "install failed" }
+          if (Test-Path "$env:RUNNER_TEMP\ri\app\run.py") { throw "source file installed" }
           Write-Host "installer ok"
       - name: Autostart test (scheduled task, browser hand-off, removal)
         shell: pwsh
@@ -160,8 +170,10 @@ jobs:
           Write-Host "autostart ok"
       - uses: actions/upload-artifact@v4
         with:
-          name: installer
-          path: dist/Raseed-Setup.exe
+          name: windows
+          path: |
+            dist/Raseed-Setup.exe
+            dist/Raseed-Windows-Portable.zip
 
   docker:
     needs: build
@@ -196,7 +208,7 @@ jobs:
           path: dist
       - uses: actions/download-artifact@v4
         with:
-          name: installer
+          name: windows
           path: dist
       - uses: actions/download-artifact@v4
         with:
