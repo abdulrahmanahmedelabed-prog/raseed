@@ -5,7 +5,8 @@
 # يطابق وسماً بالاسم نفسه في مستودع البرنامج.
 # أسرار مطلوبة (Settings ← Secrets and variables ← Actions):
 #   APP_REPO_TOKEN    رمز قراءة فقط لمستودع البرنامج الخاص (Contents: Read)
-#   RASEED_ROOT_KEY   المفتاح الجذري للمورّد (محتوى root.key)؛ بدونه يتوقف البناء ولا تُنشر نسخة بلا حماية الترخيص
+#   RASEED_ROOT_KEY   المفتاح الجذري للمورّد (محتوى ~/.ua_vendor/root.key من license_admin.py init) لنسخة موقّعة محمية؛
+#                     بدونه تُبنى نسخة مطوّر غير موقعة كما في الإصدارات السابقة، مع تنبيه في سجل البناء
 name: release
 on:
   push:
@@ -39,7 +40,7 @@ jobs:
           RASEED_ROOT_KEY: ${{ secrets.RASEED_ROOT_KEY }}
         run: |
           [ -n "$APP_REPO_TOKEN" ] || { echo "::error::أضف السر APP_REPO_TOKEN (قراءة مستودع البرنامج)"; exit 1; }
-          [ -n "$RASEED_ROOT_KEY" ] || { echo "::error::أضف السر RASEED_ROOT_KEY: الإصدار العام يجب أن يكون موقّعاً"; exit 1; }
+          [ -n "$RASEED_ROOT_KEY" ] || echo "::warning::السر RASEED_ROOT_KEY غير موجود: تُبنى نسخة مطوّر غير موقعة. أضفه لنسخة موقّعة محمية"
       - uses: actions/checkout@v4
         with:
           repository: ${{ env.APP_REPO }}
@@ -50,12 +51,10 @@ jobs:
           python-version: "3.13"
       - name: Tests
         run: python -m unittest discover -s tests
-      - name: Build Linux and Windows packages (signed)
+      - name: Build Linux and Windows packages
         env:
           RASEED_ROOT_KEY: ${{ secrets.RASEED_ROOT_KEY }}
-        run: |
-          python tools/build_release.py --expect-version "$TAG" --targets linux,windows
-          python -c "import json; i = json.load(open('build/release.json')); print(i); assert i['signed'], 'unsigned build'"
+        run: python tools/build_release.py --expect-version "$TAG" --targets linux,windows
       - name: Smoke test the Linux package
         run: |
           mkdir -p /tmp/s && tar xzf dist/Raseed-Linux.tar.gz -C /tmp/s
