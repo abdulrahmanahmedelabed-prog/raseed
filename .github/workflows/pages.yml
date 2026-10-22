@@ -32,7 +32,9 @@ jobs:
         run: |
           mkdir -p download
           tag=$(gh release view --repo "$APP_REPO" --json tagName -q .tagName)
-          gh release download "$tag" --repo "$APP_REPO" --dir download
+          # ملفات التشغيل فقط؛ الشيفرة المصدرية لا تُنشر للعامة
+          gh release download "$tag" --repo "$APP_REPO" --dir download -p Raseed-Setup.exe -p Raseed-Windows-Portable.zip -p Raseed-Linux.tar.gz -p SHA256SUMS.txt
+          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
           # ملف compose للتنزيل يسحب الصورة الجاهزة فقط (بلا build)
           gh api -H "Accept: application/vnd.github.raw" "repos/$APP_REPO/contents/docker-compose.yml?ref=$tag" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
           grep -q "image:" download/docker-compose.yml

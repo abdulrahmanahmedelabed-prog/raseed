@@ -121,12 +121,6 @@ cd raseed && sudo ./install.sh</pre>
       <pre>docker compose up -d</pre>
       <a class="btn" href="download/docker-compose.yml">docker-compose.yml</a>
     </div>
-    <div class="card">
-      <h3>الشيفرة لأي نظام</h3>
-      <p>ماك أو أي نظام فيه بايثون 3.11 فأحدث، دون أي مكتبات إضافية.</p>
-      <pre>python run.py --training</pre>
-      <a class="btn" href="download/Raseed-Source.zip">Raseed-Source.zip</a>
-    </div>
   </div>
   <p class="small muted" style="margin-top:12px">بصمات الملفات للتحقق من سلامة التنزيل: <a href="download/SHA256SUMS.txt">SHA256SUMS.txt</a> · التحديث: ثبّت الإصدار الجديد فوق القديم، فتُرقّى قاعدة البيانات تلقائياً بعد نسخة احتياطية دون فقد أي بيانات.</p>
 </div></section>
@@ -195,7 +189,7 @@ cd raseed && sudo ./install.sh</pre>
 
 <section><div class="wrap">
   <h2>أسئلة شائعة</h2>
-  <details><summary>ما المتطلبات التقنية؟</summary><p>مثبّت ويندوز والنسخة المحمولة لا يحتاجان شيئاً آخر. على لينكس أو ماك: بايثون 3.11 أو أحدث دون أي مكتبات إضافية. الاستخدام من أي متصفح حديث على الشبكة الداخلية. الربط مع Oracle 11g وحده يحتاج عميل Oracle الفوري 19.</p></details>
+  <details><summary>ما المتطلبات التقنية؟</summary><p>مثبّت ويندوز والنسخة المحمولة لا يحتاجان شيئاً آخر. حزمة لينكس تحتاج بايثون 3.11 أو أحدث من النظام فقط، وعلى ماك عبر Docker. الاستخدام من أي متصفح حديث على الشبكة الداخلية. الربط مع Oracle 11g وحده يحتاج عميل Oracle الفوري 19.</p></details>
   <details><summary>هل يحتاج إنترنت؟</summary><p>لا. كل شيء يعمل على خادم الجامعة، بما في ذلك الأدلة والخطوط والأيقونات.</p></details>
   <details><summary>كيف أنقل بياناتي من النظام القديم؟</summary><p>من الإعدادات ← الاستيراد من النظام السابق: نزّل القالب لكل نوع واملأه من Excel، فيُفحص كل صف وتظهر الأخطاء برقم صفها قبل أي تنفيذ. ميزان المراجعة الافتتاحي يرحّل حسابات المراقبة إلى حساب وسيط يصبح صفراً عندما تطابقه أرصدة الطلبة والموردين التفصيلية.</p></details>
   <details><summary>ماذا يحدث عند تحديث البرنامج؟</summary><p>ثبّت الإصدار الجديد فوق القديم. عند أول تشغيل يأخذ البرنامج نسخة احتياطية ثم يضيف ما استجد من جداول وأعمدة، دون حذف أو تعديل أي بيانات قائمة.</p></details>
@@ -207,7 +201,7 @@ cd raseed && sudo ./install.sh</pre>
 
 <footer><div class="wrap foot">
   <img src="img/logo.svg" alt="" width="34" height="34">
-  <div><b>رصيد</b> — النظام المالي للجامعات وفق المعايير الدولية. يعمل دون إنترنت ودون مكتبات أو خدمات خارجية.</div>
+  <div><b>رصيد</b> — النظام المالي للجامعات وفق المعايير الدولية. يعمل دون إنترنت ودون مكتبات أو خدمات خارجية.<div class="copy">© الحسن للبرمجيات والإعلان — Al-Hassan Software &amp; Advertising</div></div>
   <nav><a href="#download">التنزيل</a><a href="guides/">الأدلة</a></nav>
 </div></footer>
 </body>

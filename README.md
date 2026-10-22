@@ -4,7 +4,8 @@
 
 صفحة الهبوط الرسمية لـ **رصيد — النظام المالي للجامعات**: https://abdulrahmanahmedelabed-prog.github.io/raseed/
 
-- البرنامج وملفات تنزيله: [abdulrahmanahmedelabed-prog/university_accounting](https://github.com/abdulrahmanahmedelabed-prog/university_accounting) — [آخر إصدار](https://github.com/abdulrahmanahmedelabed-prog/university_accounting/releases/latest)
-- الصفحة نفسها مضمّنة داخل البرنامج على `/site/`، ومصدرها `docs/site` في مستودع البرنامج؛ تُنسخ إلى هنا عند تحديثها.
+- ملفات التنزيل تُنسخ إلى الصفحة نفسها (`download/`) من آخر إصدار عند كل نشر، وتُفحص بصماتها قبل النشر.
+- مستودع البرنامج خاص؛ يقرأ النشرُ إصداراته برمز للقراءة فقط محفوظ سراً باسم `APP_REPO_TOKEN`.
+- النشر آلي مع كل تحديث ويومياً لالتقاط الإصدارات الجديدة.
 
-النشر آلي مع كل تحديث بعد تفعيل GitHub Pages مرة واحدة: Settings ← Pages ← Source: **GitHub Actions**.
+© الحسن للبرمجيات والإعلان — Al-Hassan Software & Advertising
