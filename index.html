@@ -126,6 +126,17 @@ cd raseed && sudo ./install.sh</pre>
       <pre>docker compose up -d</pre>
       <a class="btn" href="download/docker-compose.yml">docker-compose.yml</a>
     </div>
+    <div class="card" id="apex">
+      <h3>أوراكل أبكس</h3>
+      <p>رصيد كاملاً داخل قاعدة الجامعة على Oracle 11g فما بعد وأبكس 19.2 فما بعد، بالشاشات والصلاحيات والقيود والتقارير نفسها. خطوتان:</p>
+      <ol class="small">
+        <li><b>SQL Workshop ← SQL Scripts ← Upload</b>: اختر <code>Raseed-APEX-install.sql</code> ثم <b>Run</b>. الأخطاء صفر، وإعادة تشغيله ترقية لا تمس البيانات.</li>
+        <li><b>App Builder ← Import</b>: اختر <code>f153_raseed_apex.sql</code> (Reuse Application ID 153)، ثم شغّل التطبيق وأكمل الإعداد الأولي.</li>
+      </ol>
+      <div class="dl-btns"><a class="btn" href="download/Raseed-APEX-install.sql">1. السكربت (Raseed-APEX-install.sql)</a>
+        <a class="btn" href="download/f153_raseed_apex.sql">2. التطبيق 153 (f153_raseed_apex.sql)</a></div>
+      <p class="muted small">شيفرة الحزم مغلّفة: تعمل ولا يُقرأ مصدرها. فحص الصلاحيات قبل التثبيت والتحقق بعده، ودليل التثبيت، وأداة نقل بيانات نسخة سطح المكتب: <a href="download/Raseed-APEX.zip">Raseed-APEX.zip</a></p>
+    </div>
   </div>
   <p class="small muted" style="margin-top:12px">بصمات الملفات للتحقق من سلامة التنزيل: <a href="download/SHA256SUMS.txt">SHA256SUMS.txt</a> · التحديث: ثبّت الإصدار الجديد فوق القديم، فتُرقّى قاعدة البيانات تلقائياً بعد نسخة احتياطية دون فقد أي بيانات.</p>
 </div></section>

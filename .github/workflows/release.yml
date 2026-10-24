@@ -1,6 +1,7 @@
 # يبني ملفات تنزيل رصيد من مستودع البرنامج الخاص وينشرها إصداراً في هذا المستودع العام، ثم يحدّث صفحة التنزيل.
 # الشيفرة المصدرية لا تُنشر: نسخة ويندوز (المثبّت والمحمولة) مترجمة بـ Nuitka إلى ملف تنفيذي بلا ملفات شيفرة،
-# ومعها حزمة لينكس وصورة Docker.
+# ومعها حزمة لينكس وصورة Docker، ونسخة أوراكل أبكس (سكربت SQL Workshop بحزم مغلّفة بـ DBMS_DDL.WRAP على Oracle 11g
+# في الحاوية، وتطبيق أبكس 153).
 #
 # التشغيل: من تبويب Actions (الإصدار ونسخة البرنامج: وسم أو فرع أو رقم إيداع)، أو بدفع وسم v* إلى هذا المستودع
 # يطابق وسماً بالاسم نفسه في مستودع البرنامج.
@@ -177,6 +178,52 @@ jobs:
             dist/Raseed-Setup.exe
             dist/Raseed-Windows-Portable.zip
 
+  apex:
+    needs: build
+    runs-on: ubuntu-latest
+    services:
+      oracle:
+        image: gvenzl/oracle-xe:11-slim-faststart
+        env:
+          ORACLE_PASSWORD: Raseed2026
+        ports: ["1521:1521"]
+        options: --shm-size=1g --health-cmd healthcheck.sh --health-interval 10s --health-timeout 5s --health-retries 40
+    env:
+      RSD_ORA_DSN: 127.0.0.1:1521/XE
+      RSD_ORA_SYSTEM: Raseed2026
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.APP_REPO }}
+          ref: ${{ env.APP_REF }}
+          token: ${{ secrets.APP_REPO_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Oracle Instant Client 19 (Oracle 11g needs the thick client)
+        run: |
+          sudo apt-get update -qq && (sudo apt-get install -y -qq libaio1t64 || sudo apt-get install -y -qq libaio1)
+          [ -e /usr/lib/x86_64-linux-gnu/libaio.so.1 ] || sudo ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
+          curl -sSLo ic.zip https://download.oracle.com/otn_software/linux/instantclient/1928000/instantclient-basiclite-linux.x64-19.28.0.0.0dbru.zip
+          unzip -q ic.zip -d "$RUNNER_TEMP/ic"
+          echo "RSD_ORA_CLIENT=$RUNNER_TEMP/ic/instantclient_19_28" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$RUNNER_TEMP/ic/instantclient_19_28" >> "$GITHUB_ENV"
+          python -m pip install --quiet oracledb pytest
+      - name: Build the APEX edition (package bodies wrapped, vendor key in the licence package)
+        env:
+          RASEED_ROOT_KEY: ${{ secrets.RASEED_ROOT_KEY }}
+        run: python tools/build_release.py --expect-version "$TAG" --targets apex --out dist-apex
+      - name: Install test (check, install, verify, use, install again; the wrapped file too)
+        run: |
+          grep -c " wrapped" dist-apex/Raseed-APEX-install.sql
+          ! grep -q "PACKAGE BODY RSD_LEDGER AS" dist-apex/Raseed-APEX-install.sql
+          python -m pytest -q apex/tests/test_workshop.py
+          rm -f dist-apex/SHA256SUMS.txt && ls -l dist-apex
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apex
+          path: dist-apex/
+
   docker:
     needs: build
     runs-on: ubuntu-latest
@@ -201,7 +248,9 @@ jobs:
             ghcr.io/abdulrahmanahmedelabed-prog/raseed:latest
 
   publish:
-    needs: [build, windows]
+    needs: [build, windows, apex]
+    # نسخة أبكس لا توقف الإصدار: إن فشل بناؤها نُشرت بقية الملفات وظهر التنبيه
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.windows.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -216,6 +265,13 @@ jobs:
         with:
           name: notes
           path: .
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: apex
+          path: dist
+      - name: APEX files present
+        run: ls dist/Raseed-APEX-install.sql dist/f153_raseed_apex.sql dist/Raseed-APEX.zip || echo "::warning::نسخة أبكس لم تُبنَ في هذا الإصدار"
       - name: Checksums
         run: cd dist && rm -f SHA256SUMS.txt && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
       - name: Publish the release here
