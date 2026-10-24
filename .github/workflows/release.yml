@@ -1,7 +1,7 @@
 # يبني ملفات تنزيل رصيد من مستودع البرنامج الخاص وينشرها إصداراً في هذا المستودع العام، ثم يحدّث صفحة التنزيل.
 # الشيفرة المصدرية لا تُنشر: نسخة ويندوز (المثبّت والمحمولة) مترجمة بـ Nuitka إلى ملف تنفيذي بلا ملفات شيفرة،
-# ومعها حزمة لينكس وصورة Docker، ونسخة أوراكل أبكس (سكربت SQL Workshop بحزم مغلّفة بـ DBMS_DDL.WRAP على Oracle 11g
-# في الحاوية، وتطبيق أبكس 153).
+# ومعها حزمة لينكس وصورة Docker، ونسخة أوراكل أبكس (سكربت SQL Workshop أجزاءً دون 500 كيلوبايت بحزم مغلّفة بـ
+# DBMS_DDL.WRAP على Oracle 11g في الحاوية، وتطبيق أبكس 153).
 #
 # التشغيل: من تبويب Actions (الإصدار ونسخة البرنامج: وسم أو فرع أو رقم إيداع)، أو بدفع وسم v* إلى هذا المستودع
 # يطابق وسماً بالاسم نفسه في مستودع البرنامج.
@@ -215,8 +215,10 @@ jobs:
         run: python tools/build_release.py --expect-version "$TAG" --targets apex --out dist-apex
       - name: Install test (check, install, verify, use, install again; the wrapped file too)
         run: |
-          grep -c " wrapped" dist-apex/Raseed-APEX-install.sql
-          ! grep -q "PACKAGE BODY RSD_LEDGER AS" dist-apex/Raseed-APEX-install.sql
+          grep -c " wrapped" dist-apex/Raseed-APEX-install-1.sql
+          ! grep -q "PACKAGE BODY RSD_[A-Z_]* AS" dist-apex/Raseed-APEX-install-*.sql
+          # SQL Workshop ← SQL Scripts لا يقبل ملفاً فوق 500 كيلوبايت
+          for f in dist-apex/Raseed-APEX-install-*.sql; do [ "$(stat -c%s "$f")" -lt 500000 ] || { echo "::error::$f too big"; exit 1; }; done
           python -m pytest -q apex/tests/test_workshop.py
           rm -f dist-apex/SHA256SUMS.txt && ls -l dist-apex
       - uses: actions/upload-artifact@v4
@@ -271,7 +273,7 @@ jobs:
           name: apex
           path: dist
       - name: APEX files present
-        run: ls dist/Raseed-APEX-install.sql dist/f153_raseed_apex.sql dist/Raseed-APEX.zip || echo "::warning::نسخة أبكس لم تُبنَ في هذا الإصدار"
+        run: ls dist/Raseed-APEX-install-1.sql dist/f153_raseed_apex.sql dist/Raseed-APEX.zip || echo "::warning::نسخة أبكس لم تُبنَ في هذا الإصدار"
       - name: Checksums
         run: cd dist && rm -f SHA256SUMS.txt && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
       - name: Publish the release here

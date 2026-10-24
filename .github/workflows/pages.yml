@@ -34,7 +34,7 @@ jobs:
             gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir download -p Raseed-Setup.exe -p Raseed-Windows-Portable.zip \
               -p Raseed-Linux.tar.gz -p docker-compose.yml -p SHA256SUMS.txt
             # نسخة أوراكل أبكس (منذ 1.5.4)
-            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir download -p Raseed-APEX-install.sql -p f153_raseed_apex.sql \
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir download -p 'Raseed-APEX-install-*.sql' -p f153_raseed_apex.sql \
               -p Raseed-APEX.zip || echo "no APEX files in $tag"
           else  # قبل أول إصدار هنا: آخر إصدار في مستودع البرنامج الخاص
             app=abdulrahmanahmedelabed-prog/university_accounting
@@ -44,8 +44,15 @@ jobs:
             gh api -H "Accept: application/vnd.github.raw" "repos/$app/contents/docker-compose.yml?ref=$tag" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
             (cd download && sha256sum docker-compose.yml >> SHA256SUMS.txt)
           fi
-          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz|docker-compose\.yml|Raseed-APEX-install\.sql|f153_raseed_apex\.sql|Raseed-APEX\.zip)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
-          (cd download && for f in Raseed-APEX-install.sql f153_raseed_apex.sql Raseed-APEX.zip; do [ -e "$f" ] || sed -i "/ $f\$/d" SHA256SUMS.txt; done)
+          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz|docker-compose\.yml|Raseed-APEX-install-[0-9]+\.sql|f153_raseed_apex\.sql|Raseed-APEX\.zip)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
+          (cd download && for f in $(awk '{print $2}' SHA256SUMS.txt); do [ -e "$f" ] || sed -i "/ $f\$/d" SHA256SUMS.txt; done)
+          # أزرار أجزاء سكربت أبكس بعددها في هذا الإصدار
+          links=""
+          for f in $(ls download/Raseed-APEX-install-*.sql 2>/dev/null | sort -V); do
+            n=$(basename "$f" .sql); n=${n##*-}
+            links="$links<a class=\"btn\" href=\"download/$(basename "$f")\">${n}. السكربت، الجزء ${n} ($(basename "$f"))<\/a>"
+          done
+          sed -i "s|<!--APEX-->.*<!--/APEX-->|<!--APEX-->$links<!--/APEX-->|" index.html
           grep -q "image:" download/docker-compose.yml
           (cd download && sha256sum -c SHA256SUMS.txt)
           sed -i "s/الإصدار [0-9][0-9.]* ·/الإصدار ${tag#v} ·/" index.html
