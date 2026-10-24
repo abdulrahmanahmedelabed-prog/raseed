@@ -131,11 +131,11 @@ cd raseed && sudo ./install.sh</pre>
       <p>رصيد كاملاً داخل قاعدة الجامعة على Oracle 11g فما بعد وأبكس 19.2 فما بعد، بالشاشات والصلاحيات والقيود والتقارير نفسها. خطوتان:</p>
       <ol class="small">
         <li><b>SQL Workshop ← SQL Scripts ← Upload</b>: ارفع أجزاء السكربت بالترتيب (<code>Raseed-APEX-install-1.sql</code> ثم <code>-2.sql</code>) وشغّل كلاً منها بـ <b>Run</b>. الأخطاء صفر، وإعادة تشغيلها ترقية لا تمس البيانات. (السكربت أجزاء لأن SQL Scripts لا يقبل ملفاً فوق 500 كيلوبايت.)</li>
-        <li><b>App Builder ← Import</b>: اختر <code>f153_raseed_apex.sql</code> (Reuse Application ID 153)، ثم شغّل التطبيق وأكمل الإعداد الأولي.</li>
+        <li><b>App Builder ← Import</b>: اختر <code>f153_raseed_apex.sql</code> (Reuse Application ID 153)، ثم شغّل التطبيق وادخل بحسابك في أبكس: يرحّب بك رصيد ويجعلك مدير النظام دون كلمة مرور أخرى.</li>
       </ol>
       <div class="dl-btns"><!--APEX--><a class="btn" href="download/Raseed-APEX-install-1.sql">1. السكربت، الجزء 1 (Raseed-APEX-install-1.sql)</a><a class="btn" href="download/Raseed-APEX-install-2.sql">2. السكربت، الجزء 2 (Raseed-APEX-install-2.sql)</a><!--/APEX-->
         <a class="btn primary" href="download/f153_raseed_apex.sql">ثم التطبيق 153 (f153_raseed_apex.sql)</a></div>
-      <p class="muted small">شيفرة الحزم مغلّفة: تعمل ولا يُقرأ مصدرها. فحص الصلاحيات قبل التثبيت والتحقق بعده، ودليل التثبيت، وأداة نقل بيانات نسخة سطح المكتب: <a href="download/Raseed-APEX.zip">Raseed-APEX.zip</a></p>
+      <p class="muted small">كل شخص يدخل بحسابه في أبكس، ورابط <code>f?p=153:1:&amp;SESSION.</code> في صفحة من نظام الجامعة يفتحه بالجلسة نفسها مع زر رجوع إليها. شيفرة الحزم مغلّفة: تعمل ولا يُقرأ مصدرها. فحص الصلاحيات قبل التثبيت والتحقق بعده، ودليل التثبيت، وأداة نقل بيانات نسخة سطح المكتب: <a href="download/Raseed-APEX.zip">Raseed-APEX.zip</a></p>
     </div>
   </div>
   <p class="small muted" style="margin-top:12px">بصمات الملفات للتحقق من سلامة التنزيل: <a href="download/SHA256SUMS.txt">SHA256SUMS.txt</a> · التحديث: ثبّت الإصدار الجديد فوق القديم، فتُرقّى قاعدة البيانات تلقائياً بعد نسخة احتياطية دون فقد أي بيانات.</p>
