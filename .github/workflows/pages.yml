@@ -36,6 +36,9 @@ jobs:
             # نسخة أوراكل أبكس (منذ 1.5.4)
             gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir download -p 'Raseed-APEX-install-*.sql' -p f153_raseed_apex.sql \
               -p Raseed-APEX.zip || echo "no APEX files in $tag"
+            # نسخة التدريب في أبكس (منذ 1.6.0)
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir download -p f154_raseed_training.sql -p 4_training.sql \
+              || echo "no APEX training files in $tag"
           else  # قبل أول إصدار هنا: آخر إصدار في مستودع البرنامج الخاص
             app=abdulrahmanahmedelabed-prog/university_accounting
             export GH_TOKEN="$APP_REPO_TOKEN"
@@ -44,7 +47,7 @@ jobs:
             gh api -H "Accept: application/vnd.github.raw" "repos/$app/contents/docker-compose.yml?ref=$tag" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
             (cd download && sha256sum docker-compose.yml >> SHA256SUMS.txt)
           fi
-          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz|docker-compose\.yml|Raseed-APEX-install-[0-9]+\.sql|f153_raseed_apex\.sql|Raseed-APEX\.zip)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
+          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz|docker-compose\.yml|Raseed-APEX-install-[0-9]+\.sql|f153_raseed_apex\.sql|f154_raseed_training\.sql|4_training\.sql|Raseed-APEX\.zip)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
           (cd download && for f in $(awk '{print $2}' SHA256SUMS.txt); do [ -e "$f" ] || sed -i "/ $f\$/d" SHA256SUMS.txt; done)
           # أزرار أجزاء سكربت أبكس بعددها في هذا الإصدار
           links=""
