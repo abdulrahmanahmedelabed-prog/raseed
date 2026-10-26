@@ -217,8 +217,12 @@ jobs:
         run: |
           grep -c " wrapped" dist-apex/Raseed-APEX-install-1.sql
           ! grep -q "PACKAGE BODY RSD_[A-Z_]* AS" dist-apex/Raseed-APEX-install-*.sql
+          # نسخة التدريب: مغلّفة كذلك، وكل كائن فيها RST_ (تجاور رصيد في المخطط نفسه ولا تنشئ شيئاً باسمه)
+          grep -c " wrapped" dist-apex/Raseed-Training-install-1.sql
+          ! grep -q "PACKAGE BODY RST_[A-Z_]* AS" dist-apex/Raseed-Training-install-*.sql
+          ! grep -qE "(PACKAGE|PACKAGE BODY|TABLE|SEQUENCE|TRIGGER|INDEX|VIEW|TYPE) \"?RSD_" dist-apex/Raseed-Training-install-*.sql
           # SQL Workshop ← SQL Scripts لا يقبل ملفاً فوق 500 كيلوبايت
-          for f in dist-apex/Raseed-APEX-install-*.sql; do [ "$(stat -c%s "$f")" -lt 500000 ] || { echo "::error::$f too big"; exit 1; }; done
+          for f in dist-apex/Raseed-*-install-*.sql; do [ "$(stat -c%s "$f")" -lt 500000 ] || { echo "::error::$f too big"; exit 1; }; done
           python -m pytest -q apex/tests/test_workshop.py
           rm -f dist-apex/SHA256SUMS.txt && ls -l dist-apex
       - uses: actions/upload-artifact@v4

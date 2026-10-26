@@ -38,7 +38,7 @@ jobs:
               -p Raseed-APEX.zip || echo "no APEX files in $tag"
             # نسخة التدريب في أبكس (منذ 1.6.0)
             gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir download -p f154_raseed_training.sql -p 4_training.sql \
-              || echo "no APEX training files in $tag"
+              -p 'Raseed-Training-install-*.sql' -p remove_training.sql || echo "no APEX training files in $tag"
           else  # قبل أول إصدار هنا: آخر إصدار في مستودع البرنامج الخاص
             app=abdulrahmanahmedelabed-prog/university_accounting
             export GH_TOKEN="$APP_REPO_TOKEN"
@@ -47,7 +47,7 @@ jobs:
             gh api -H "Accept: application/vnd.github.raw" "repos/$app/contents/docker-compose.yml?ref=$tag" | sed '/^[[:space:]]*build: \.$/d' > download/docker-compose.yml
             (cd download && sha256sum docker-compose.yml >> SHA256SUMS.txt)
           fi
-          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz|docker-compose\.yml|Raseed-APEX-install-[0-9]+\.sql|f153_raseed_apex\.sql|f154_raseed_training\.sql|4_training\.sql|Raseed-APEX\.zip)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
+          grep -E ' (Raseed-Setup\.exe|Raseed-Windows-Portable\.zip|Raseed-Linux\.tar\.gz|docker-compose\.yml|Raseed-APEX-install-[0-9]+\.sql|f153_raseed_apex\.sql|f154_raseed_training\.sql|4_training\.sql|Raseed-Training-install-[0-9]+\.sql|remove_training\.sql|Raseed-APEX\.zip)$' download/SHA256SUMS.txt > download/sums && mv download/sums download/SHA256SUMS.txt
           (cd download && for f in $(awk '{print $2}' SHA256SUMS.txt); do [ -e "$f" ] || sed -i "/ $f\$/d" SHA256SUMS.txt; done)
           # أزرار أجزاء سكربت أبكس بعددها في هذا الإصدار
           links=""
@@ -56,6 +56,13 @@ jobs:
             links="$links<a class=\"btn\" href=\"download/$(basename "$f")\">${n}. السكربت، الجزء ${n} ($(basename "$f"))<\/a>"
           done
           sed -i "s|<!--APEX-->.*<!--/APEX-->|<!--APEX-->$links<!--/APEX-->|" index.html
+          # وأجزاء نسخة التدريب (كائناتها RST_، تجاور رصيد في مخطط الجامعة نفسه)
+          links=""
+          for f in $(ls download/Raseed-Training-install-*.sql 2>/dev/null | sort -V); do
+            n=$(basename "$f" .sql); n=${n##*-}
+            links="$links<a class=\"btn\" href=\"download/$(basename "$f")\">التدريب ${n} ($(basename "$f"))<\/a>"
+          done
+          sed -i "s|<!--TRAINING-->.*<!--/TRAINING-->|<!--TRAINING-->$links<!--/TRAINING-->|" index.html
           grep -q "image:" download/docker-compose.yml
           (cd download && sha256sum -c SHA256SUMS.txt)
           sed -i "s/الإصدار [0-9][0-9.]* ·/الإصدار ${tag#v} ·/" index.html
