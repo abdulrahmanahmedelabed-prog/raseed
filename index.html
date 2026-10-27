@@ -128,15 +128,27 @@ cd raseed && sudo ./install.sh</pre>
     </div>
     <div class="card" id="apex">
       <h3>أوراكل أبكس</h3>
-      <p>رصيد كاملاً داخل قاعدة الجامعة على Oracle 11g فما بعد وأبكس 19.2 فما بعد، بالشاشات والصلاحيات والقيود والتقارير نفسها. خطوتان:</p>
+      <p>رصيد كاملاً داخل قاعدة الجامعة على Oracle 11g فما بعد وأبكس 19.2 فما بعد، بالشاشات والصلاحيات والقيود والتقارير نفسها، وصفحاته مبنية من مكوّنات أبكس نفسها (مناطق وتقارير وعناصر وإجراءات ديناميكية) فيفتحها مبرمجو الجامعة في App Builder كأي صفحة.</p>
+      <div class="try">
+        <h4>جرّبه أولاً: جامعة التدريب الخفيفة في أوراكل</h4>
+        <p>جامعة كاملة ببيانات وهمية: نحو 10 آلاف طالب (منهم نحو 5,500 فعّالون)، و510 موظفين، ونحو 100 ألف قيد في ثلاث سنوات من العمليات، تُكمل أيامها بنفسها كل ساعة. حجمها أقل من 300 ميغابايت، وتُجهَّز في الخلفية في نحو ربع ساعة. كائناتها باسم <code>RST_</code> فتُثبَّت في مخطط الجامعة نفسه بجانب بياناته دون أن تمسها (أو في مخطط خاص)، وتُحذف كلها بسكربت واحد.</p>
+        <ol class="small">
+          <li><b>SQL Workshop ← SQL Scripts</b>: أجزاء التدريب بالترتيب (<code>Raseed-Training-install-1.sql</code> وما بعده)، كلٌّ بـ <b>Run</b>.</li>
+          <li><b>SQL Commands</b>: محتوى <a href="download/4_training.sql">4_training.sql</a> (<code>RST_M_TRAINING.prepare('lite')</code>) يبدأ التجهيز في الخلفية.</li>
+          <li><b>App Builder ← Import</b>: <a href="download/f154_raseed_training.sql">f154_raseed_training.sql</a> (Reuse Application ID 154)، ثم ادخل بأحد حسابات التدريب (<code>admin</code> و<code>cfo</code> و<code>acc1</code>…) بكلمة المرور <code>train2026</code>.</li>
+        </ol>
+        <div class="dl-btns"><!--TRAINING--><a class="btn" href="download/Raseed-Training-install-1.sql">التدريب 1 <bdi>(Raseed-Training-install-1.sql)</bdi></a><!--/TRAINING-->
+          <a class="btn" href="download/4_training.sql">تجهيز الجامعة <bdi>(4_training.sql)</bdi></a><a class="btn primary" href="download/f154_raseed_training.sql">تطبيق التدريب 154 <bdi>(f154_raseed_training.sql)</bdi></a></div>
+        <p class="muted small">للحذف بعد الانتهاء: <a href="download/remove_training.sql">remove_training.sql</a> (يحذف ما اسمه <code>RST_</code> وحده)، ثم حذف التطبيق 154.</p>
+      </div>
+      <h4>التثبيت الفعلي لجامعتك</h4>
       <ol class="small">
         <li><b>SQL Workshop ← SQL Scripts ← Upload</b>: ارفع أجزاء السكربت بالترتيب (<code>Raseed-APEX-install-1.sql</code> ثم <code>-2.sql</code> وما بعده) وشغّل كلاً منها بـ <b>Run</b>. الأخطاء صفر، وإعادة تشغيلها ترقية لا تمس البيانات. (السكربت أجزاء لأن SQL Scripts لا يقبل ملفاً فوق 500 كيلوبايت.)</li>
         <li><b>App Builder ← Import</b>: اختر <code>f153_raseed_apex.sql</code> (Reuse Application ID 153)، ثم شغّل التطبيق وادخل بحسابك في أبكس: يرحّب بك رصيد ويجعلك مدير النظام دون كلمة مرور أخرى.</li>
       </ol>
-      <div class="dl-btns"><!--APEX--><a class="btn" href="download/Raseed-APEX-install-1.sql">1. السكربت، الجزء 1 (Raseed-APEX-install-1.sql)</a><a class="btn" href="download/Raseed-APEX-install-2.sql">2. السكربت، الجزء 2 (Raseed-APEX-install-2.sql)</a><!--/APEX-->
-        <a class="btn primary" href="download/f153_raseed_apex.sql">ثم التطبيق 153 (f153_raseed_apex.sql)</a></div>
-      <p class="muted small">لكل صفحة من صفحات رصيد صفحة أبكس بمخطط تفويض (<code>RSD_PAGE_ACCESS</code>) لا يفتحها إلا مستخدم فعّال في رصيد يسمح دوره وصفحاته بها، ولو كُتب رقمها في العنوان. كل شخص يدخل بحسابه في أبكس، ورابط <code>f?p=153:1:&amp;SESSION.</code> في صفحة من نظام الجامعة يفتحه بالجلسة نفسها مع زر رجوع إليها. نسخة التدريب، في مخطط الجامعة نفسه بجانب رصيد (كائناتها <code>RST_</code> فلا تمس بياناته) أو في مخطط خاص: أجزاؤها بالترتيب ثم <a href="download/4_training.sql">4_training.sql</a> ثم التطبيق <a href="download/f154_raseed_training.sql">f154_raseed_training.sql</a>، ولحذفها بعد الانتهاء <a href="download/remove_training.sql">remove_training.sql</a>.</p>
-      <div class="dl-btns"><!--TRAINING--><a class="btn" href="download/Raseed-Training-install-1.sql">التدريب 1 (Raseed-Training-install-1.sql)</a><!--/TRAINING--></div>
+      <div class="dl-btns"><!--APEX--><a class="btn" href="download/Raseed-APEX-install-1.sql">1. السكربت، الجزء 1 <bdi>(Raseed-APEX-install-1.sql)</bdi></a><a class="btn" href="download/Raseed-APEX-install-2.sql">2. السكربت، الجزء 2 <bdi>(Raseed-APEX-install-2.sql)</bdi></a><!--/APEX-->
+        <a class="btn primary" href="download/f153_raseed_apex.sql">ثم التطبيق 153 <bdi>(f153_raseed_apex.sql)</bdi></a></div>
+      <p class="muted small">التطبيق دون صفحات الواجهة (كل صفحاته من مكوّنات أبكس): <a href="download/f153_raseed_apex_native_only.sql">f153_raseed_apex_native_only.sql</a>، وللتدريب <a href="download/f154_raseed_training_native_only.sql">f154_raseed_training_native_only.sql</a>. لكل صفحة مخطط تفويض (<code>RSD_PAGE_ACCESS</code>) لا يفتحها إلا مستخدم فعّال في رصيد يسمح دوره وصفحاته بها، ولو كُتب رقمها في العنوان. كل شخص يدخل بحسابه في أبكس، ورابط <code>f?p=153:1:&amp;SESSION.</code> في صفحة من نظام الجامعة يفتحه بالجلسة نفسها مع زر رجوع إليها.</p>
       <p class="muted small">شيفرة الحزم مغلّفة: تعمل ولا يُقرأ مصدرها. فحص الصلاحيات قبل التثبيت والتحقق بعده، ودليل التثبيت، وأداة نقل بيانات نسخة سطح المكتب: <a href="download/Raseed-APEX.zip">Raseed-APEX.zip</a></p>
     </div>
   </div>
@@ -214,6 +226,7 @@ cd raseed && sudo ./install.sh</pre>
   <details><summary>ماذا يحدث إذا انتهى الترخيص؟</summary><p>يتحول البرنامج للقراءة والتصدير فقط حتى التجديد، ولا تُفقد أو تُقفل أي بيانات.</p></details>
   <details><summary>هل يمكن تعديل قيد مرحّل؟</summary><p>لا، وفق مبادئ الرقابة الداخلية. يُصحَّح القيد المرحّل بقيد عكسي موثق السبب، ويبقى الأصل والعكس ظاهرين للمدقق.</p></details>
   <details><summary>كيف أجرّب البرنامج؟</summary><p>شغّل «رصيد — نسخة التدريب» فتُنشأ جامعة كاملة ببيانات وهمية وحسابات تدريب لكل دور (admin، cfo، chief، acc1، cash1، audit) وكلمة المرور train2026. التفاصيل في <a href="guides/#start">دليل البدء</a>.</p></details>
+  <details><summary>كيف أجرّب البرنامج على أوراكل أبكس؟</summary><p>ثبّت جامعة التدريب الخفيفة في مخطط الجامعة نفسه بجانب بياناته: أجزاء التدريب، ثم <code>4_training.sql</code>، ثم التطبيق 154، وادخل بـ <code>admin</code> وكلمة المرور <code>train2026</code>. حجمها أقل من 300 ميغابايت، ولا تمس أي جدول من جداول الجامعة، وتُحذف كلها بـ <code>remove_training.sql</code>. الخطوات في <a href="#apex">قسم أوراكل أبكس</a>.</p></details>
 </div></section>
 </main>
 

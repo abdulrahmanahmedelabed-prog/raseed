@@ -57,6 +57,9 @@ table.std th { background: var(--surface-2); font-weight: 600; }
 .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
 .gallery figure { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 .gallery figcaption { padding: 8px 12px; font-size: 14px; color: var(--text-2); }
+.try { background: var(--accent-soft, var(--surface-2)); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 12px 0 16px; }
+.try h4 { margin: 0 0 6px; }
+.try p { margin: 0 0 8px; }
 .note { background: var(--warn-soft); color: var(--text); border-radius: 10px; padding: 12px 16px; font-size: 15px; }
 code, pre { font-family: Consolas, "Courier New", monospace; direction: ltr; unicode-bidi: plaintext; }
 pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font-size: 14px; text-align: left; }
@@ -78,6 +81,10 @@ header.top .btn.sm { padding: 6px 14px; font-size: 14px; }
 .dl .dl-main h3, .dl .dl-main > p { grid-column: 1; }
 .dl .dl-btns { grid-column: 2; grid-row: 1 / span 3; display: flex; flex-direction: column; gap: 8px; }
 .dl .card pre { margin: 8px 0 10px; }
+.dl #apex { grid-column: 1 / -1; }
+.dl #apex .dl-btns { flex-direction: row; flex-wrap: wrap; margin: 8px 0; }
+#apex code { overflow-wrap: anywhere; }
+#apex code, #apex p a[href^="download/"], #apex li a[href^="download/"], .btn bdi { unicode-bidi: isolate; direction: ltr; }
 .dl .card > .btn { margin-top: 2px; }
 .muted { color: var(--muted); }
 .small { font-size: 14px; }
