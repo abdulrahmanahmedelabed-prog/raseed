@@ -135,19 +135,22 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "self test failed" }
           if (-not ($t | ConvertFrom-Json).oracledb) { throw "oracledb missing from the compiled edition" }
           $env:RASEED_DATA = "$env:RUNNER_TEMP\rd"
-          $p = Start-Process -FilePath $exe -ArgumentList "--no-browser", "--port", "8891" -PassThru
+          New-Item -ItemType Directory -Force $env:RASEED_DATA | Out-Null
+          $p = Start-Process -FilePath $exe -ArgumentList "--no-browser", "--port", "8891" -PassThru -RedirectStandardOutput "$env:RASEED_DATA\out.log" -RedirectStandardError "$env:RASEED_DATA\err.log"
           $r = $null
           for ($i = 0; $i -lt 120 -and -not $r; $i++) { try { $r = Invoke-RestMethod http://localhost:8891/api/status } catch { Start-Sleep 1 } }
-          $ui = (Invoke-WebRequest http://localhost:8891/core.js -UseBasicParsing).StatusCode
-          Stop-Process -Id $p.Id -Force
-          if (-not $r.product -or $ui -ne 200) { Get-Content "$env:RASEED_DATA\pg.log" -ErrorAction SilentlyContinue; throw "server did not start" }
+          $ui = 0; try { $ui = (Invoke-WebRequest http://localhost:8891/core.js -UseBasicParsing).StatusCode } catch { }
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          Get-Content "$env:RASEED_DATA\out.log", "$env:RASEED_DATA\err.log" -ErrorAction SilentlyContinue
+          if (-not $r.product -or $ui -ne 200) { Get-Content "$env:RASEED_DATA\pg.log" -ErrorAction SilentlyContinue; Get-ChildItem $env:RASEED_DATA; throw "server did not start" }
           Write-Host "server ok: $($r.product) $($r.version)"
           if (-not (Test-Path "$env:RASEED_DATA\dsn.txt")) { throw "embedded cluster not initialised" }
           # نسخة التدريب على الخادم المضمّن نفسه (قاعدة raseed_training)
-          $p = Start-Process -FilePath $exe -ArgumentList "--training", "--scale", "test", "--no-browser", "--port", "8893" -PassThru
+          $p = Start-Process -FilePath $exe -ArgumentList "--training", "--scale", "test", "--no-browser", "--port", "8893" -PassThru -RedirectStandardOutput "$env:RASEED_DATA\tout.log" -RedirectStandardError "$env:RASEED_DATA\terr.log"
           $ready = $false
           for ($i = 0; $i -lt 300 -and -not $ready; $i++) { try { $s = Invoke-RestMethod http://localhost:8893/api/status; $ready = -not $s.preparing -and $s.product } catch { }; if (-not $ready) { Start-Sleep 1 } }
-          Stop-Process -Id $p.Id -Force
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          Get-Content "$env:RASEED_DATA\tout.log", "$env:RASEED_DATA\terr.log" -ErrorAction SilentlyContinue
           if (-not $ready) { throw "training edition did not become ready" }
           Write-Host "training edition ok"
           & "build\windows\Raseed\pg\bin\pg_ctl.exe" -D "$env:RASEED_DATA\pg" -m fast stop
